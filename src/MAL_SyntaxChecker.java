@@ -12,33 +12,6 @@ public class MAL_SyntaxChecker {
                 ,"SUB,r,r,d","DEC,r","MUL,r,r,d","DIV,r,r,d","BEQ,r,r,lab"
                 ,"BLT,r,r,lab","BGT,r,r,lab","BR,lab","END"};
                 */
-        String[] commands = {"MOVE","MOVEI","ADD","INC"
-                ,"SUB","DEC","MUL","DIV","BEQ"
-                ,"BLT","BGT","BR","END"};
-        /*
-        r = register
-        d = destination (memory)
-        v = immediate value
-        lab= label
-        */
-        String[] arguments = {
-                "r,d",      //MOVE
-                "v,d",      //MOVEI
-                "r,r,d",    //ADD
-                "r",        //INC
-                "r,r,d",    //SUB
-                "r",        //DEC
-                "r,r,d",    //MUL
-                "r,r,d",    //DIV
-                "r,r,lab",  //BEW
-                "r,r,lab",  //BLT
-                "r,r,lab",  //BGT
-                "lab",      //BR
-                ""};        //END (no args)
-        /*
-        Commands are in same order as the arguments.
-        commands[5] will have arguments: arguments[5];
-         */
 
         ArrayList labels = new ArrayList(); //Stores all seen labels
 
@@ -53,11 +26,18 @@ public class MAL_SyntaxChecker {
             PrintWriter writer = new PrintWriter(file+"-log", "UTF-8");
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
             String line;
+            int count = 0;
 
             while ((line = reader.readLine()) != null) {
+                count++;
                 LineParser code = new LineParser(line);
-                System.out.println(code.line);
-                if(!code.getCommand().isEmpty()) System.out.println("******" + code.getCommand());
+                if(!code.line.isEmpty()) System.out.println(code.line);
+                //if(!code.getLabel().isEmpty()) System.out.println(code.getLabel());
+                //if(!code.getCommand().isEmpty()) System.out.println(code.getCommand());
+                if(code.getLabel().isEmpty() && code.getCommand().isEmpty()){
+                    System.out.println("ERROR ON LINE " + count);
+                    break;
+                }
             }
 
 
