@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 
 /**
@@ -8,13 +9,11 @@ import java.util.Scanner;
 public class MAL_SyntaxChecker {
 
     public static void main(String[] args) {
-        /*String[] commands = {"MOVE,r,d","MOVEI,v,d","ADD,r,r,d","INC,r"
-                ,"SUB,r,r,d","DEC,r","MUL,r,r,d","DIV,r,r,d","BEQ,r,r,lab"
-                ,"BLT,r,r,lab","BGT,r,r,lab","BR,lab","END"};
-                */
 
         ArrayList<String> labels_defined = new ArrayList<>(); //Stores all created labels
         ArrayList<String> labels_used = new ArrayList<>(); //Stores all referenced labels
+        MAL_Error error; //Object that holds errors found in instructions
+        error = new MAL_Error();
         /*
         All used labels must relate to a defined label. Otherwise critical error.
         Each defined label should be used. Otherwise compiler warning (not error).
@@ -24,11 +23,19 @@ public class MAL_SyntaxChecker {
             Scanner input = new Scanner(System.in);  // Reading from System.in
             System.out.print("Enter filename (no extension): ");
             String fileName = input.next();
-            File file = new File(fileName+".txt");
+            File file = new File(fileName+".mal");
             FileInputStream stream;
             stream = new FileInputStream(file);
-            PrintWriter writer = new PrintWriter(file+"-log", "UTF-8");
+            PrintWriter writer = new PrintWriter(fileName+".log", "UTF-8");
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+            writer.write(fileName+".mal");
+            writer.write("MAL Compiler Output\n");
+            Date sysDate = new Date();
+            writer.write("Generated: "+ sysDate.toString());
+            writer.write("\nCS 3210");
+            writer.write("\nEric Carver");
+            writer.write("\n---------------------------------------------");
 
             String line;
             int count = 0;
@@ -37,7 +44,7 @@ public class MAL_SyntaxChecker {
             while ((line = reader.readLine()) != null) {
                 count++;
                 LineParser code = new LineParser(line);
-                if(!code.line.isEmpty()) System.out.println(code.line); //Print the instruction if there is any text
+                if(!code.line.isEmpty()) writer.write("\n"+count + ".\t" + code.line); //Print the instruction if there is any text
 
                 if(!code.getLabel().isEmpty()) {
                     //System.out.println("-----\t$$$"+code.getLabel());
@@ -45,26 +52,32 @@ public class MAL_SyntaxChecker {
                 }
                 if(!code.getCommand().isEmpty()) { //Triggers the command parsing
                     //System.out.println("-----\t***"+code.getCommand());
-                    code.parseInstruction(line); //Triggers the command parsing
-                    if(code.getCommand().equals("END"))
+                    if(code.getCommand().equals("END")) //Allows the END command to ignore the parser
                         hasEnd = true;
+                    else error = code.parseInstruction(code.getCommand()); //Triggers the command parsing
+                    if(!error.isEmpty)
+                        break;
                     if(!code.label.isEmpty())
                         labels_used.add(code.label);
                 }
                 if(!code.line.isEmpty() && code.getLabel().isEmpty() && code.getCommand().isEmpty()){ //If line is not empty and has no labels or commands, error.
                     System.out.println("ERROR ON LINE " + count);
+                    error = code.parseInstruction(code.getCommand());
                     break;
                 }
             }
 
-            System.out.println("\n------------------------------");
-            System.out.println("------------------------------");
+            writer.write("\n------------------------------");
+            writer.write("------------------------------\n");
+            for (int i = 0; i < error.messages.size(); i++)
+                writer.write(error.messages.get(i)+"\n");
             if(hasEnd)
-                System.out.println("Compilation success.\nNo errors detected!");
+                writer.write("Compilation success.\nNo errors detected!");
+            else if (error.messages.isEmpty())
+                writer.write("Compilation failed.\n\"END\" not seen. No errors detected otherwise.");
             else
-                System.out.println("Compilation failed.\n\"END\" not seen. No errors detected otherwise.");
-
-
+                writer.write("Compilation failed with " + error.messages.size() + " errors.");
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

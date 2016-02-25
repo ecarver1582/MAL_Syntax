@@ -7,6 +7,7 @@ import java.util.Arrays;
 public class LineParser {
     String line;
     String label = ""; //Will pass the label branched to in the instruction if one exists
+    MAL_Error error = new MAL_Error();
 
     public LineParser(String input){ //Code that gets run when LineParser is created.
         line = input;
@@ -21,18 +22,7 @@ public class LineParser {
     }
 
     public String stripSpaces(String line) {
-        if(line.isEmpty()) //No need to strip trailing spaces if it is already empty.
-            return line;
-        while(line.charAt(0) == ' ' || line.charAt(0) == '\t') //Strip leading spaces
-            line = line.substring(1);
-        if(line.isEmpty()) //No need to strip trailing spaces if it is already empty.
-            return line;
-        for(int i=line.length(); i>0; i++) {
-            if(line.charAt(0) == ' ' || line.charAt(0) == '\t') //Strip trailing spaces
-                line = line.substring(0, i);
-            else break;
-        }
-        return line;
+        return line.trim();
     }
 
     public String getCommand() {
@@ -119,33 +109,32 @@ public class LineParser {
         String instruction = line; //Create an editable version of the instruction
         int cmd_row = 0; //Guaranteed to have a legitimate command.
         for(int i=0; i<commands.length; i++) {
-            if(commands[i][0].equals(cmd))
+            if(commands[i][0].equals(cmd)){
                 cmd_row = i;
+            }
         }
 
-        boolean hasError = false;
+        boolean hasError;
         String param = ""; //Will store each parameter one at a time.
-        MAL_Error error;
+        if(!getLabel().isEmpty()) instruction = stripSpaces(instruction.substring(instruction.indexOf(" "))); //Skip the label if one exists
         instruction = stripSpaces(instruction.substring(instruction.indexOf(" "))); //Skip past the "command" so that line has only parameters
         for(int i=1; i<commands[cmd_row].length; i++) { //For each parameter required by the command
             if(instruction.contains(",")) { //If it is not the last  param, grab the next parameter.
                 param = stripSpaces(instruction.substring(0, instruction.indexOf(",")));
             }
+            else param = stripSpaces(instruction);
 
             if (commands[cmd_row][i].equals("r")) { //Parameter is supposed to be a register
-                hasError = isLegalRegister(param);
+                hasError = !isLegalRegister(param);
                 if (hasError) {
-                    System.out.println("Failed at register");
                     return new MAL_Error(commands[cmd_row][i], param);
             }
                 //If no error exists, param is valid. Move on!
             }
 
             else if(commands[cmd_row][i].equals("d")) { //Parameter is supposed to be a destination
-                hasError = isLegalRegister(param); //Checks if destination is a register
-                if(!hasError) hasError = isLegalLabel(param); //If not, check if destination is <=5 letters (only letters)
+                hasError = (!isLegalRegister(param) && !isLegalLabel(param)); //Checks if destination is a register
                 if(hasError) {
-                    System.out.println("Failed at destination");
                     return new MAL_Error(commands[cmd_row][i], param);
                 }
             }
@@ -155,24 +144,25 @@ public class LineParser {
                     int num = Integer.parseInt(param);
                 }
                 catch (NumberFormatException e) { //Not a number
-                    System.out.println("Failed at immediate value");
                     return new MAL_Error(commands[cmd_row][i], param);
                 }
             }
 
             else { //Parameter is supposed to be a label
-                hasError = isLegalLabel(param);
+                hasError = !isLegalLabel(param);
                 if(hasError) {
-                    System.out.println("Failed at label");
                     return new MAL_Error(commands[cmd_row][i], param);
                 }
                 label = param;
             }
 
+            //System.out.println("Param"+i+":"+param);
             if(instruction.contains(",")) //If there is a new parameter, grab it.
-                instruction = stripSpaces(instruction.substring(instruction.indexOf(","))); //Move to the next parameter
+                instruction = stripSpaces(instruction.substring(instruction.indexOf(",")+1)); //Move to the next parameter
         }//End for-loop for each parameter
-        return null;
+        if(instruction.contains(","))
+            return new MAL_Error("param","");
+        return error;
     } //End parseInstruction()
 
     String[] registers = {"R0","R1","R2","R3","R4","R5","R6","R7"}; //All legal registers
