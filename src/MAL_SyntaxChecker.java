@@ -34,7 +34,7 @@ public class MAL_SyntaxChecker {
                 if(!code.line.isEmpty()) System.out.println(code.line); //Print the line of code
 
                 if(!code.getLabel().isEmpty()) labels.add(code.getLabel());
-                //if(!code.getCommand().isEmpty()) System.out.println(code.getCommand());
+                //if(!code.getCommand().isEmpty()) System.out.println(code.getCommand())
                 if(!code.line.isEmpty() && code.getLabel().isEmpty() && code.getCommand().isEmpty()){
                     System.out.println("ERROR ON LINE " + count);
                     break;
