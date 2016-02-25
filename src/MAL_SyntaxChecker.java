@@ -13,7 +13,7 @@ public class MAL_SyntaxChecker {
                 ,"BLT,r,r,lab","BGT,r,r,lab","BR,lab","END"};
                 */
 
-        ArrayList labels = new ArrayList(); //Stores all seen labels
+        ArrayList<String> labels = new ArrayList<>(); //Stores all seen labels
 
 
         try {
@@ -31,10 +31,11 @@ public class MAL_SyntaxChecker {
             while ((line = reader.readLine()) != null) {
                 count++;
                 LineParser code = new LineParser(line);
-                if(!code.line.isEmpty()) System.out.println(code.line);
-                //if(!code.getLabel().isEmpty()) System.out.println(code.getLabel());
+                if(!code.line.isEmpty()) System.out.println(code.line); //Print the line of code
+
+                if(!code.getLabel().isEmpty()) labels.add(code.getLabel());
                 //if(!code.getCommand().isEmpty()) System.out.println(code.getCommand());
-                if(code.getLabel().isEmpty() && code.getCommand().isEmpty()){
+                if(!code.line.isEmpty() && code.getLabel().isEmpty() && code.getCommand().isEmpty()){
                     System.out.println("ERROR ON LINE " + count);
                     break;
                 }

@@ -7,9 +7,8 @@ import java.util.Arrays;
 public class LineParser {
     String line;
     String tempLine;
-    ArrayList<String> labels = new ArrayList<>();
 
-    public LineParser(String input){
+    public LineParser(String input, ArrayList labels){
         line = input;
         line = stripComments(line); //Strip comments off of the line
         if(!isEmpty(line)) line = stripLeading(line); //Strips leading spaces
@@ -17,7 +16,7 @@ public class LineParser {
 
     public String getCommand() {
         tempLine = line;
-        if (!isEmpty(tempLine) && getLabel().isEmpty()) { //If the line itself isn't empty AND it doesn't contain a label
+        if (!isEmpty(tempLine) && getLabel(label).isEmpty()) { //If the line itself isn't empty AND it doesn't contain a label
             int index = tempLine.indexOf(" ");
             if (index == -1)
                 index = tempLine.indexOf("\t"); //Gets chars before first space/tab (already stripped of leading spaces)
@@ -43,7 +42,7 @@ public class LineParser {
         return line;
     }
 
-    public String getLabel() { //Returns empty string if none exists
+    public String getLabel(ArrayList labels) { //Returns empty string if none exists
         tempLine = line;
         int colonPos = tempLine.indexOf(":");
         if(colonPos!=-1) {
