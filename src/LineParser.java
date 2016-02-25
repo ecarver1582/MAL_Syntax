@@ -6,28 +6,11 @@ import java.util.Arrays;
  */
 public class LineParser {
     String line;
-    String tempLine;
 
-    public LineParser(String input, ArrayList labels){
+    public LineParser(String input){
         line = input;
         line = stripComments(line); //Strip comments off of the line
         if(!isEmpty(line)) line = stripLeading(line); //Strips leading spaces
-    }
-
-    public String getCommand() {
-        tempLine = line;
-        if (!isEmpty(tempLine) && getLabel(label).isEmpty()) { //If the line itself isn't empty AND it doesn't contain a label
-            int index = tempLine.indexOf(" ");
-            if (index == -1)
-                index = tempLine.indexOf("\t"); //Gets chars before first space/tab (already stripped of leading spaces)
-            if (index != -1 && isLegalCommand(tempLine.substring(0, index))) //Testing just the "command" to see if it is legal.
-                return tempLine.substring(0, index); //If no spaces exist, check for a tab
-            else return "";
-        } else return "";
-    }
-
-    public boolean isLegalCommand(String command) {
-        return Arrays.asList(commands).contains(command);
     }
 
     private String stripComments(String line) {
@@ -42,61 +25,100 @@ public class LineParser {
         return line;
     }
 
-    public String getLabel(ArrayList labels) { //Returns empty string if none exists
-        tempLine = line;
-        int colonPos = tempLine.indexOf(":");
-        if(colonPos!=-1) {
-            tempLine = tempLine.substring(0, colonPos);
-            if (isLegalLabel(tempLine)) { //5 chars + colon
-                labels.add(tempLine);
-                return tempLine;
-            }
+    public String getCommand() {
+        String cmd = line;
+        if (!isEmpty(cmd) && !getLabel().isEmpty()) {
+            cmd = cmd.substring(cmd.indexOf(":")+1); //If there is a label, ignore it.
+        }
+        if (!isEmpty(cmd)) { //If the line itself isn't empty AND it doesn't contain a label
+            cmd = stripLeading(cmd);
+            if(cmd.equals("END")) //Case of "END" with no following spaces
+                return cmd;
+            int index = cmd.indexOf(" ");
+            if (index != -1 && isLegalCommand(cmd.substring(0, index))) //Testing just the "command" to see if it is legal.
+                return cmd.substring(0, index); //If no spaces exist, check for a tab
             else return "";
         }
-        else return "";
+        return "";
+    }
+
+    public boolean isLegalCommand(String command) {
+        for(int i=0;i<commands.length;i++) {
+            if(command.equals(commands[i][0])) //Checks to see if the command given is in the list of commands
+                return true;
+        }
+        return false;
+    }
+
+    public String getLabel() { //Returns empty string if none/invalid
+        String lab = line;
+        int colonPos = lab.indexOf(":");
+        if(colonPos!=-1) {
+            lab = lab.substring(0, colonPos);
+            if (isLegalLabel(lab)) { //5 chars + colon
+                return lab;
+            }
+            else return ""; //Invalid label, but it does exist
+        }
+        else return ""; //No label present
     }
 
     public boolean isLegalLabel(String label) {
-        return (label.length()<5 && label.matches("[a-zA-Z]+"));
+        return (label.length()<=5 && label.matches("[a-zA-Z]+"));
+        //Returns true if and only if the label contains only letters and is less than six characters
     }
 
 
     public Boolean isEmpty(String line) {
         Boolean non_space = false;
         for(int i=0; i<line.length(); i++){ //Counts backwards from the end of the line
-
             if(line.charAt(i) != ' ' && line.charAt(i) != '\t')
                 non_space = true; //Flag set to true when any non "space" character is found
         }
         return !non_space;
     }
 
-    String[] commands = {"MOVE","MOVEI","ADD","INC"
-            ,"SUB","DEC","MUL","DIV","BEQ"
-            ,"BLT","BGT","BR","END"};
-    /*
-    r = register
-    d = destination (memory)
-    v = immediate value
-    lab= label
-    */
-    String[] arguments = {
-            "r,d",      //MOVE
-            "v,d",      //MOVEI
-            "r,r,d",    //ADD
-            "r",        //INC
-            "r,r,d",    //SUB
-            "r",        //DEC
-            "r,r,d",    //MUL
-            "r,r,d",    //DIV
-            "r,r,lab",  //BEW
-            "r,r,lab",  //BLT
-            "r,r,lab",  //BGT
-            "lab",      //BR
-            ""};        //END (no args)
-        /*
-        Commands are in same order as the arguments.
-        commands[5] will have arguments: arguments[5];
-         */
+    String[][] commands = {
+            /*
+            * Commands are followed by their required "parameters"
+            * r = register
+            * d = destination
+            * v = immediate value
+            * lab = label
+            * */
+            {"MOVE","r","d"},
+            {"MOVEI","v","d"},
+            {"ADD","r","r","d"},
+            {"INC","r"},
+            {"SUB","r","r","d"},
+            {"DEC","r"},
+            {"MUL","r","r","d"},
+            {"DIV","r","r","d"},
+            {"BEQ","r","r","lab"},
+            {"BLT","r","r","lab"},
+            {"BGT","r","r","lab"},
+            {"BR","lab"},
+            {"END"}            //END (no args)
+    };
 
+    public void parseCommand(String cmd, String line)
+    {
+
+    }
+
+    String[] registers = {
+                "R0",
+                "R1",
+                "R2",
+                "R3",
+                "R4",
+                "R5",
+                "R6",
+                "R7",
+        };
+
+    public boolean isLegalRegister(String reg)
+    {
+        return Arrays.asList(registers).contains(reg);
+    } //Returns true if the "register" is in the above list
 }

@@ -7,5 +7,4 @@
 ;testing some stuff
           INC       R1
           BR        TOP
-  CONT:   MOVE      R0, TOTAL
-          END
+  CONTa:   MOVE      R0, TOTAL
