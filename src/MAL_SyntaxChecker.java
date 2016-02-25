@@ -43,10 +43,13 @@ public class MAL_SyntaxChecker {
                     //System.out.println("-----\t$$$"+code.getLabel());
                     labels_defined.add(code.getLabel()); //Adds the label to an array list.
                 }
-                if(!code.getCommand().isEmpty()) {
+                if(!code.getCommand().isEmpty()) { //Triggers the command parsing
                     //System.out.println("-----\t***"+code.getCommand());
+                    code.parseInstruction(line); //Triggers the command parsing
                     if(code.getCommand().equals("END"))
                         hasEnd = true;
+                    if(!code.label.isEmpty())
+                        labels_used.add(code.label);
                 }
                 if(!code.line.isEmpty() && code.getLabel().isEmpty() && code.getCommand().isEmpty()){ //If line is not empty and has no labels or commands, error.
                     System.out.println("ERROR ON LINE " + count);
