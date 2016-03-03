@@ -5,14 +5,14 @@ import java.util.Arrays;
  * Created by Eric on 2/17/2016.
  */
 public class LineParser {
-    String line;
+    String line="";
     String label = ""; //Will pass the label branched to in the instruction if one exists
     MAL_Error error = new MAL_Error();
 
     public LineParser(String input){ //Code that gets run when LineParser is created.
         line = input;
         line = stripComments(line); //Strip comments off of the line
-        if(!isEmpty(line)) line = stripSpaces(line); //Strips leading spaces
+        line = stripSpaces(line); //Strips leading spaces
     }
 
     private String stripComments(String line) {
@@ -80,23 +80,23 @@ public class LineParser {
 
     String[][] commands = {
             /*
-            * Commands are followed by their required "parameters"
+            * Commands are followed by their required "parameters" (args)
             * r = register
             * d = destination
             * v = immediate value
             * lab = label
             * */
-            {"MOVE","r","d"},
+            {"MOVE","d","d"},
             {"MOVEI","v","d"},
-            {"ADD","r","r","d"},
-            {"INC","r"},
-            {"SUB","r","r","d"},
-            {"DEC","r"},
-            {"MUL","r","r","d"},
-            {"DIV","r","r","d"},
-            {"BEQ","r","r","lab"},
-            {"BLT","r","r","lab"},
-            {"BGT","r","r","lab"},
+            {"ADD","d","d","d"},
+            {"INC","d"},
+            {"SUB","d","d","d"},
+            {"DEC","d"},
+            {"MUL","d","d","d"},
+            {"DIV","d","d","d"},
+            {"BEQ","d","d","lab"},
+            {"BLT","d","d","lab"},
+            {"BGT","d","d","lab"},
             {"BR","lab"},
             {"END"}            //END (no args)
     };
@@ -117,12 +117,25 @@ public class LineParser {
         boolean hasError;
         String param = ""; //Will store each parameter one at a time.
         if(!getLabel().isEmpty()) instruction = stripSpaces(instruction.substring(instruction.indexOf(" "))); //Skip the label if one exists
-        instruction = stripSpaces(instruction.substring(instruction.indexOf(" "))); //Skip past the "command" so that line has only parameters
+        if(instruction.contains(" "))
+            instruction = stripSpaces(instruction.substring(instruction.indexOf(" "))); //Skip past the "command" so that line has only parameters
+        else
+            return new MAL_Error("gen", param);
+
+        /*
+        * This is the meat of the program. The following for loop goes through each arg to see if it is legal
+        * If not legal, it will return an error message which will then be printed out.
+         */
         for(int i=1; i<commands[cmd_row].length; i++) { //For each parameter required by the command
             if(instruction.contains(",")) { //If it is not the last  param, grab the next parameter.
                 param = stripSpaces(instruction.substring(0, instruction.indexOf(",")));
             }
-            else param = stripSpaces(instruction);
+
+            else { //Last parameter
+                param = stripSpaces(instruction);
+                if (param.isEmpty())
+                    return new MAL_Error("param_few","");
+            }
 
             if (commands[cmd_row][i].equals("r")) { //Parameter is supposed to be a register
                 hasError = !isLegalRegister(param);
@@ -141,7 +154,7 @@ public class LineParser {
 
             else if(commands[cmd_row][i].equals("v")) { //Parameter is supposed to be an immediate value
                 try {
-                    int num = Integer.parseInt(param);
+                    int num = Integer.parseInt(param); //Attempts to convert string to int
                 }
                 catch (NumberFormatException e) { //Not a number
                     return new MAL_Error(commands[cmd_row][i], param);
@@ -159,9 +172,15 @@ public class LineParser {
             //System.out.println("Param"+i+":"+param);
             if(instruction.contains(",")) //If there is a new parameter, grab it.
                 instruction = stripSpaces(instruction.substring(instruction.indexOf(",")+1)); //Move to the next parameter
+            else if(!instruction.contains(",") && i==commands[cmd_row].length-2)
+                return new MAL_Error("param_few","");
         }//End for-loop for each parameter
-        if(instruction.contains(","))
-            return new MAL_Error("param","");
+        if(instruction.contains(",")) {
+            return new MAL_Error("param_few","");
+        }
+        if(instruction.contains(",")) //Extra parameter detected
+            return new MAL_Error("param_extra","");
+
         return error;
     } //End parseInstruction()
 

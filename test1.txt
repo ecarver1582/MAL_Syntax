@@ -1,8 +1,0 @@
-          MOVEI     0 , R0
-          MOVEI     1, R1
-          MOVEI     12, R2 ; test comment
-  TOP:    
-          BGT       R1, R2, CONT;test
-          ADD       R0, R1, R0
-;testing some stuff
-          INC       R1
